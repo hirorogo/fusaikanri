@@ -30,15 +30,15 @@ class DebtCog(commands.Cog):
     self.bot = bot;
     self.db = DebtDatabase();
   
-  debt_group = app_commands.Group(name="debt", description="借金管理コマンド");
+  debt_group = app_commands.Group(name="debt", description="お金の貸し借りを管理するコマンド");
   
-  @debt_group.command(name="add", description="借金を追加する")
+  @debt_group.command(name="borrow", description="相手からお金を借りたことを記録する")
   @app_commands.describe(
-    user="借金相手",
-    amount="金額",
-    description="説明（任意）"
+    user="お金を貸してくれた人",
+    amount="借りた金額",
+    description="何のために借りたか（例: ランチ代）"
   )
-  async def add_debt(
+  async def borrow_money(
     self, 
     interaction: discord.Interaction, 
     user: discord.User, 
@@ -46,12 +46,12 @@ class DebtCog(commands.Cog):
     description: Optional[str] = ""
   ):
     """
-    借金を追加するコマンド
+    お金を借りたことを記録するコマンド
     
     Args:
       interaction: インタラクション
-      user: 借金相手
-      amount: 金額
+      user: お金を貸してくれた人
+      amount: 借りた金額
       description: 説明
     """
     if amount <= 0:
@@ -59,7 +59,59 @@ class DebtCog(commands.Cog):
       return;
     
     if user.id == interaction.user.id:
-      await interaction.response.send_message("自分に借金はできないぞ", ephemeral=True);
+      await interaction.response.send_message("自分から自分に借りることはできないぞ", ephemeral=True);
+      return;
+    
+    # 借金を追加（userが債権者、interaction.userが債務者）
+    success = self.db.add_debt(user.id, interaction.user.id, amount, description);
+    
+    if success:
+      # 現在の総借金額を取得
+      total_debt = self.db.get_debt(user.id, interaction.user.id);
+      
+      # ログチャンネルに送信
+      await self._send_log(
+        interaction.guild.id,
+        f"{interaction.user.mention}は{user.mention}から{amount}円借りた！\n"
+        f"累計{total_debt}円！はよ返せよな！"
+      );
+      
+      await interaction.response.send_message(
+        f"{user.mention}から{amount}円借りた！\n"
+        f"累計: {total_debt}円",
+        ephemeral=False
+      );
+    else:
+      await interaction.response.send_message("記録に失敗した", ephemeral=True);
+  
+  @debt_group.command(name="lend", description="相手に貸したことを記録する")
+  @app_commands.describe(
+    user="お金を貸した相手",
+    amount="貸した金額",
+    description="メモ）"
+  )
+  async def lend_money(
+    self, 
+    interaction: discord.Interaction, 
+    user: discord.User, 
+    amount: int,
+    description: Optional[str] = ""
+  ):
+    """
+    お金を貸したことを記録するコマンド
+    
+    Args:
+      interaction: インタラクション
+      user: お金を貸した相手
+      amount: 貸した金額
+      description: 説明
+    """
+    if amount <= 0:
+      await interaction.response.send_message("金額は1円以上を指定してくれ", ephemeral=True);
+      return;
+    
+    if user.id == interaction.user.id:
+      await interaction.response.send_message("自分に自分で貸すことはできないぞ", ephemeral=True);
       return;
     
     # 借金を追加（interaction.userが債権者、userが債務者）
@@ -72,22 +124,22 @@ class DebtCog(commands.Cog):
       # ログチャンネルに送信
       await self._send_log(
         interaction.guild.id,
-        f"{user.mention}は{interaction.user.mention}から{amount}円借金した！\n"
-        f"累計{total_debt}円の借金はよ返せよな！"
+        f"{interaction.user.mention}は{user.mention}に{amount}円貸した！\n"
+        f"累計{total_debt}円！{user.mention}はよ返せよな！"
       );
       
       await interaction.response.send_message(
-        f"{user.mention}に{amount}円貸したぞ！\n"
+        f"{user.mention}に{amount}円貸した！\n"
         f"累計: {total_debt}円",
         ephemeral=False
       );
     else:
-      await interaction.response.send_message("借金の追加に失敗した", ephemeral=True);
+      await interaction.response.send_message("記録に失敗した", ephemeral=True);
   
-  @debt_group.command(name="pay", description="借金を返済する")
+  @debt_group.command(name="pay", description="借りたお金を返済する")
   @app_commands.describe(
-    user="返済先",
-    amount="返済額"
+    user="返済先（お金を貸してくれた人）",
+    amount="返済する金額"
   )
   async def pay_debt(
     self,
@@ -112,7 +164,7 @@ class DebtCog(commands.Cog):
     
     if not success:
       await interaction.response.send_message(
-        f"{user.mention}への借金がないか、金額が多すぎるぞ",
+        f"{user.mention}からは借りてないか、金額が多すぎるぞ",
         ephemeral=True
       );
       return;
@@ -125,7 +177,7 @@ class DebtCog(commands.Cog):
         f"完済だ！おつかれ！"
       );
       await interaction.response.send_message(
-        f"{user.mention}に{amount}円返済した！完済だ！",
+        f"{user.mention}に{amount:,}円返済した！完済だ！",
         ephemeral=False
       );
     else:
@@ -135,7 +187,7 @@ class DebtCog(commands.Cog):
         f"残りの借金は{remaining}円だぞ！"
       );
       await interaction.response.send_message(
-        f"{user.mention}に{amount}円返済した！\n残り: {remaining}円",
+        f"{user.mention}に{amount:,}円返済した！\n残り: {remaining:,}円",
         ephemeral=False
       );
   
@@ -212,10 +264,10 @@ class DebtCog(commands.Cog):
         ephemeral=False
       );
   
-  @debt_group.command(name="list", description="自分の借金一覧を表示する")
+  @debt_group.command(name="list", description="自分の貸し借り一覧を表示する")
   async def list_debts(self, interaction: discord.Interaction):
     """
-    借金一覧を表示するコマンド
+    貸し借り一覧を表示するコマンド
     
     Args:
       interaction: インタラクション
@@ -223,37 +275,41 @@ class DebtCog(commands.Cog):
     debts = self.db.get_user_debts(interaction.user.id);
     
     embed = discord.Embed(
-      title=f"{interaction.user.display_name}の借金一覧",
+      title=f"{interaction.user.display_name}の貸し借り一覧",
       color=discord.Color.blue()
     );
     
     # 貸している分
     if debts["creditor"]:
       creditor_list = [];
+      total_lent = 0;
       for debtor_id, amount in debts["creditor"]:
         user = await self.bot.fetch_user(debtor_id);
-        creditor_list.append(f"{user.mention}: {amount}円");
+        creditor_list.append(f"- {user.mention}に: {amount:,}円");
+        total_lent += amount;
       embed.add_field(
-        name="貸している分",
+        name=f"貸している（合計: {total_lent:,}円）",
         value="\n".join(creditor_list),
         inline=False
       );
     else:
-      embed.add_field(name="貸している分", value="なし", inline=False);
+      embed.add_field(name="貸している", value="なし", inline=False);
     
     # 借りている分
     if debts["debtor"]:
       debtor_list = [];
+      total_borrowed = 0;
       for creditor_id, amount in debts["debtor"]:
         user = await self.bot.fetch_user(creditor_id);
-        debtor_list.append(f"{user.mention}: {amount}円");
+        debtor_list.append(f"- {user.mention}から: {amount:,}円");
+        total_borrowed += amount;
       embed.add_field(
-        name="借りている分",
+        name=f"借りている（合計: {total_borrowed:,}円）",
         value="\n".join(debtor_list),
         inline=False
       );
     else:
-      embed.add_field(name="借りている分", value="なし", inline=False);
+      embed.add_field(name="借りている", value="なし", inline=False);
     
     await interaction.response.send_message(embed=embed, ephemeral=True);
   
