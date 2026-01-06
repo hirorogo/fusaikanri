@@ -370,6 +370,7 @@ class DebtDatabase:
     all_users = set(creditor_totals.keys()) | set(debtor_totals.keys());
     
     # トップ債権者をソート（貸している額が多い順）
+    # 注: user_idを整数に変換。Discord APIでは整数のユーザーIDが必要なため
     top_creditors = sorted(
       [(int(uid), amt) for uid, amt in creditor_totals.items()],
       key=lambda x: x[1],
@@ -377,6 +378,7 @@ class DebtDatabase:
     )[:5];
     
     # トップ債務者をソート（借りている額が多い順）
+    # 注: user_idを整数に変換。Discord APIでは整数のユーザーIDが必要なため
     top_debtors = sorted(
       [(int(uid), amt) for uid, amt in debtor_totals.items()],
       key=lambda x: x[1],

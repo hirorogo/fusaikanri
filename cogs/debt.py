@@ -289,7 +289,7 @@ class DebtCog(commands.Cog):
         try:
           user = await self.bot.fetch_user(user_id);
           creditor_list.append(f"{i}. {user.display_name}: {amount:,}円");
-        except:
+        except (discord.NotFound, discord.HTTPException):
           creditor_list.append(f"{i}. ユーザー#{user_id}: {amount:,}円");
       
       embed.add_field(
@@ -305,7 +305,7 @@ class DebtCog(commands.Cog):
         try:
           user = await self.bot.fetch_user(user_id);
           debtor_list.append(f"{i}. {user.display_name}: {amount:,}円");
-        except:
+        except (discord.NotFound, discord.HTTPException):
           debtor_list.append(f"{i}. ユーザー#{user_id}: {amount:,}円");
       
       embed.add_field(
