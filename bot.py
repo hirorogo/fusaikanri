@@ -4,12 +4,20 @@ fusaikanri - Discord Bot for Managing Debt/Technical Debt
 This bot helps manage and track debt items on Discord servers.
 """
 import os
+import logging
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('fusaikanri')
 
 # Bot configuration
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -27,8 +35,8 @@ bot = commands.Bot(command_prefix=PREFIX, intents=intents)
 @bot.event
 async def on_ready():
     """Event handler for when the bot is ready."""
-    print(f'{bot.user} has connected to Discord!')
-    print(f'Bot is in {len(bot.guilds)} guild(s)')
+    logger.info(f'{bot.user} has connected to Discord!')
+    logger.info(f'Bot is in {len(bot.guilds)} guild(s)')
 
 
 @bot.event
@@ -41,7 +49,7 @@ async def on_command_error(ctx, error):
     elif isinstance(error, commands.MissingPermissions):
         await ctx.send('このコマンドを実行する権限がありません。')
     else:
-        print(f'Error: {error}')
+        logger.error(f'Unhandled command error: {error}', exc_info=True)
         await ctx.send('エラーが発生しました。')
 
 
@@ -60,16 +68,16 @@ async def hello(ctx):
 def main():
     """Main function to run the bot."""
     if not TOKEN:
-        print('Error: DISCORD_TOKEN not found in environment variables.')
-        print('Please create a .env file with your Discord bot token.')
+        logger.error('DISCORD_TOKEN not found in environment variables.')
+        logger.error('Please create a .env file with your Discord bot token.')
         return
     
     try:
         bot.run(TOKEN)
     except discord.LoginFailure:
-        print('Error: Invalid token. Please check your DISCORD_TOKEN.')
+        logger.error('Invalid token. Please check your DISCORD_TOKEN.')
     except Exception as e:
-        print(f'Error starting bot: {e}')
+        logger.error(f'Error starting bot: {e}', exc_info=True)
 
 
 if __name__ == '__main__':
