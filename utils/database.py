@@ -334,3 +334,58 @@ class DebtDatabase:
       Optional[int]: チャンネルID
     """
     return self.data["log_channels"].get(str(guild_id));
+  
+  def get_summary(self) -> Dict:
+    """
+    全体の借金サマリーを取得する
+    
+    Returns:
+      Dict: サマリー情報 {
+        "total_debts": 総借金額,
+        "total_users": 関係者数,
+        "top_creditors": [(user_id, 貸している総額)],
+        "top_debtors": [(user_id, 借りている総額)]
+      }
+    """
+    creditor_totals = {};  # {user_id: 貸している総額}
+    debtor_totals = {};    # {user_id: 借りている総額}
+    total_amount = 0;
+    
+    # 全ての借金を集計
+    for creditor_id, debtors in self.data["debts"].items():
+      creditor_total = 0;
+      for debtor_id, amount in debtors.items():
+        creditor_total += amount;
+        total_amount += amount;
+        
+        # 債務者の総額を更新
+        if debtor_id not in debtor_totals:
+          debtor_totals[debtor_id] = 0;
+        debtor_totals[debtor_id] += amount;
+      
+      # 債権者の総額を更新
+      creditor_totals[creditor_id] = creditor_total;
+    
+    # 関係者数を計算（債権者と債務者の和集合）
+    all_users = set(creditor_totals.keys()) | set(debtor_totals.keys());
+    
+    # トップ債権者をソート（貸している額が多い順）
+    top_creditors = sorted(
+      [(int(uid), amt) for uid, amt in creditor_totals.items()],
+      key=lambda x: x[1],
+      reverse=True
+    )[:5];
+    
+    # トップ債務者をソート（借りている額が多い順）
+    top_debtors = sorted(
+      [(int(uid), amt) for uid, amt in debtor_totals.items()],
+      key=lambda x: x[1],
+      reverse=True
+    )[:5];
+    
+    return {
+      "total_debts": total_amount,
+      "total_users": len(all_users),
+      "top_creditors": top_creditors,
+      "top_debtors": top_debtors
+    };

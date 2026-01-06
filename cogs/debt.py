@@ -254,6 +254,68 @@ class DebtCog(commands.Cog):
     
     await interaction.response.send_message(embed=embed, ephemeral=True);
   
+  @debt_group.command(name="summary", description="全体の借金サマリーを表示する")
+  async def summary(self, interaction: discord.Interaction):
+    """
+    全体の借金サマリーを表示するコマンド
+    
+    Args:
+      interaction: インタラクション
+    """
+    summary = self.db.get_summary();
+    
+    embed = discord.Embed(
+      title="借金サマリー",
+      description="サーバー全体の借金状況だぞ",
+      color=discord.Color.purple()
+    );
+    
+    # 基本統計
+    embed.add_field(
+      name="総借金額",
+      value=f"{summary['total_debts']:,}円",
+      inline=True
+    );
+    embed.add_field(
+      name="関係者数",
+      value=f"{summary['total_users']}人",
+      inline=True
+    );
+    
+    # トップ債権者（貸している人）
+    if summary["top_creditors"]:
+      creditor_list = [];
+      for i, (user_id, amount) in enumerate(summary["top_creditors"], 1):
+        try:
+          user = await self.bot.fetch_user(user_id);
+          creditor_list.append(f"{i}. {user.display_name}: {amount:,}円");
+        except:
+          creditor_list.append(f"{i}. ユーザー#{user_id}: {amount:,}円");
+      
+      embed.add_field(
+        name="トップ債権者（貸してる）",
+        value="\n".join(creditor_list) if creditor_list else "なし",
+        inline=False
+      );
+    
+    # トップ債務者（借りている人）
+    if summary["top_debtors"]:
+      debtor_list = [];
+      for i, (user_id, amount) in enumerate(summary["top_debtors"], 1):
+        try:
+          user = await self.bot.fetch_user(user_id);
+          debtor_list.append(f"{i}. {user.display_name}: {amount:,}円");
+        except:
+          debtor_list.append(f"{i}. ユーザー#{user_id}: {amount:,}円");
+      
+      embed.add_field(
+        name="トップ債務者（借りてる）",
+        value="\n".join(debtor_list) if debtor_list else "なし",
+        inline=False
+      );
+    
+    await interaction.response.send_message(embed=embed, ephemeral=False);
+  
   @debt_group.command(name="transfer", description="債権を譲渡する")
   @app_commands.describe(
     debtor="債務者（借りている人）",

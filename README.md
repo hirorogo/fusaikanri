@@ -57,6 +57,7 @@ python bot.py
 - `/debt pay <相手> <金額>` - 返済を記録
 - `/debt status <相手>` - 特定のユーザーとの収支を確認
 - `/debt history` - 取引履歴を表示
+- `/debt summary` - サーバー全体の借金サマリーを表示
 
 #### 債権譲渡コマンド（オプション機能）
 - `/debt transfer <債務者> <譲渡先> <金額>` - 債権を他のユーザーに譲渡
@@ -75,6 +76,9 @@ python bot.py
 
 # 収支の確認
 /debt status @ユーザー名
+
+# サーバー全体のサマリーを表示
+/debt summary
 ```
 
 ### 債権譲渡機能について
