@@ -48,7 +48,7 @@ async def on_ready():
   # スラッシュコマンドを同期
   try:
     synced = await bot.tree.sync();
-    logger.info(f'{len(synced)} 個のスラッシュコマンドを同期した');
+    logger.info(f'{len(synced)} 個のスラッシュコマンドを同期');
   except Exception as e:
     logger.error(f'コマンド同期エラー: {e}', exc_info=True);
 
@@ -84,7 +84,7 @@ def main():
   try:
     bot.run(Config.DISCORD_TOKEN);
   except discord.LoginFailure:
-    logger.error('トークンが無効だ。DISCORD_TOKENを確認してくれ');
+    logger.error('トークンが無効。DISCORD_TOKENを確認してくれ');
   except Exception as e:
     logger.error(f'Bot起動エラー: {e}', exc_info=True);
 
