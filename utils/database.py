@@ -132,7 +132,7 @@ class DebtDatabase:
       self.data["debts"][creditor_str][debtor_str] = new_amount;
     
     # 履歴を追加（代理返済の場合はpayer_idを記録）
-    description = f"payer:{payer_id}" if payer_id and payer_id != debtor_id else "";
+    description = f"paid_by:{payer_id}" if payer_id and payer_id != debtor_id else "";
     self._add_history("pay", creditor_id, debtor_id, amount, description);
     
     self._save_data();

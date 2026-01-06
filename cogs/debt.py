@@ -172,7 +172,15 @@ class DebtCog(commands.Cog):
       );
       return;
     
+    if creditor.id == debtor.id:
+      await interaction.response.send_message(
+        "債権者と債務者が同じ人だぞ！正しい相手を指定してくれ",
+        ephemeral=True
+      );
+      return;
+    
     # 借金を返済（creditorが債権者、debtorが債務者、interaction.userが代理で返済）
+    # NOTE: 権限チェックなし - 身内で使うため誰でも代理返済可能
     success, remaining = self.db.pay_debt(creditor.id, debtor.id, amount, interaction.user.id);
     
     if not success:
