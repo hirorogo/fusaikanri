@@ -312,8 +312,19 @@ class DebtCog(commands.Cog):
         "pay_on_behalf": "代理返済"
       }.get(h["action"], h["action"]);
       
-      creditor = await self.bot.fetch_user(int(h["creditor"]));
-      debtor = await self.bot.fetch_user(int(h["debtor"]));
+      try:
+        creditor = await self.bot.fetch_user(int(h["creditor"]));
+        debtor = await self.bot.fetch_user(int(h["debtor"]));
+      except (discord.NotFound, discord.HTTPException):
+        # ユーザー取得失敗時はIDで表示
+        creditor_id = h["creditor"];
+        debtor_id = h["debtor"];
+        embed.add_field(
+          name=f"{action_text} - {h['timestamp'][:10]}",
+          value=f"User {creditor_id} → User {debtor_id}: {h['amount']}円",
+          inline=False
+        );
+        continue;
       
       # 代理返済の場合は返済者を表示
       if h["action"] == "pay_on_behalf" and "payer:" in h["description"]:
@@ -325,8 +336,8 @@ class DebtCog(commands.Cog):
             value=f"{creditor.display_name} ← {debtor.display_name}: {h['amount']}円 (代理: {payer.display_name})",
             inline=False
           );
-        except (ValueError, IndexError):
-          # パース失敗時は通常表示
+        except (ValueError, IndexError, discord.NotFound, discord.HTTPException):
+          # パース失敗またはユーザー取得失敗時は通常表示
           embed.add_field(
             name=f"{action_text} - {h['timestamp'][:10]}",
             value=f"{creditor.display_name} → {debtor.display_name}: {h['amount']}円",

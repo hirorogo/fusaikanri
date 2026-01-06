@@ -300,7 +300,7 @@ class DebtDatabase:
     履歴を追加する
     
     Args:
-      action: アクション種別（add, pay, transfer）
+      action: アクション種別（add, pay, pay_on_behalf, transfer）
       creditor_id: 債権者ID
       debtor_id: 債務者ID
       amount: 金額
