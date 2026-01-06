@@ -79,7 +79,7 @@ class DebtCog(commands.Cog):
       await interaction.response.send_message(
         f"{user.mention}から{amount}円借りた！\n"
         f"累計: {total_debt}円",
-        ephemeral=False
+        ephemeral=True
       );
     else:
       await interaction.response.send_message("記録に失敗した", ephemeral=True);
@@ -131,7 +131,7 @@ class DebtCog(commands.Cog):
       await interaction.response.send_message(
         f"{user.mention}に{amount}円貸した！\n"
         f"累計: {total_debt}円",
-        ephemeral=False
+        ephemeral=True
       );
     else:
       await interaction.response.send_message("記録に失敗した", ephemeral=True);
@@ -178,7 +178,7 @@ class DebtCog(commands.Cog):
       );
       await interaction.response.send_message(
         f"{user.mention}に{amount:,}円返済した！完済だ！",
-        ephemeral=False
+        ephemeral=True
       );
     else:
       await self._send_log(
@@ -188,7 +188,7 @@ class DebtCog(commands.Cog):
       );
       await interaction.response.send_message(
         f"{user.mention}に{amount:,}円返済した！\n残り: {remaining:,}円",
-        ephemeral=False
+        ephemeral=True
       );
   
   @debt_group.command(name="pay_on_behalf", description="他の人の借金を代わりに返済する")
@@ -251,7 +251,7 @@ class DebtCog(commands.Cog):
       );
       await interaction.response.send_message(
         f"{debtor.mention}の代わりに{creditor.mention}へ{amount}円返済した！完済だ！",
-        ephemeral=False
+        ephemeral=True
       );
     else:
       await self._send_log(
@@ -261,7 +261,7 @@ class DebtCog(commands.Cog):
       );
       await interaction.response.send_message(
         f"{debtor.mention}の代わりに{creditor.mention}へ{amount}円返済した！\n残り: {remaining}円",
-        ephemeral=False
+        ephemeral=True
       );
   
   @debt_group.command(name="list", description="自分の貸し借り一覧を表示する")
@@ -498,7 +498,7 @@ class DebtCog(commands.Cog):
     await interaction.response.send_message(
       f"{new_creditor.mention}に{debtor.mention}への債権{amount}円を譲渡した！\n"
       f"残りの債権: {remaining}円",
-      ephemeral=False
+      ephemeral=True
     );
   
   config_group = app_commands.Group(name="config", description="設定コマンド", parent=debt_group);
