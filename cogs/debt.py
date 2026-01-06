@@ -317,13 +317,21 @@ class DebtCog(commands.Cog):
       
       # 代理返済の場合は返済者を表示
       if h["action"] == "pay_on_behalf" and "payer:" in h["description"]:
-        payer_id = int(h["description"].split("payer:")[1]);
-        payer = await self.bot.fetch_user(payer_id);
-        embed.add_field(
-          name=f"{action_text} - {h['timestamp'][:10]}",
-          value=f"{creditor.display_name} ← {debtor.display_name}: {h['amount']}円 (代理: {payer.display_name})",
-          inline=False
-        );
+        try:
+          payer_id = int(h["description"].split("payer:")[1]);
+          payer = await self.bot.fetch_user(payer_id);
+          embed.add_field(
+            name=f"{action_text} - {h['timestamp'][:10]}",
+            value=f"{creditor.display_name} ← {debtor.display_name}: {h['amount']}円 (代理: {payer.display_name})",
+            inline=False
+          );
+        except (ValueError, IndexError):
+          # パース失敗時は通常表示
+          embed.add_field(
+            name=f"{action_text} - {h['timestamp'][:10]}",
+            value=f"{creditor.display_name} → {debtor.display_name}: {h['amount']}円",
+            inline=False
+          );
       else:
         embed.add_field(
           name=f"{action_text} - {h['timestamp'][:10]}",
