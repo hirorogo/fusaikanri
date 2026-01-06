@@ -95,7 +95,7 @@ class DebtDatabase:
     
     return self._save_data();
   
-  def pay_debt(self, creditor_id: int, debtor_id: int, amount: int) -> Tuple[bool, int]:
+  def pay_debt(self, creditor_id: int, debtor_id: int, amount: int, payer_id: Optional[int] = None) -> Tuple[bool, int]:
     """
     借金を返済する
     
@@ -103,6 +103,7 @@ class DebtDatabase:
       creditor_id: 債権者のID
       debtor_id: 債務者のID
       amount: 返済額
+      payer_id: 代理で返済する人のID（任意）
     
     Returns:
       Tuple[bool, int]: (成功フラグ, 残りの借金額)
@@ -130,8 +131,9 @@ class DebtDatabase:
     else:
       self.data["debts"][creditor_str][debtor_str] = new_amount;
     
-    # 履歴を追加
-    self._add_history("pay", creditor_id, debtor_id, amount, "");
+    # 履歴を追加（代理返済の場合はpayer_idを記録）
+    description = f"payer:{payer_id}" if payer_id and payer_id != debtor_id else "";
+    self._add_history("pay", creditor_id, debtor_id, amount, description);
     
     self._save_data();
     return True, new_amount;
