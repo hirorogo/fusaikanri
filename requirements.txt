@@ -5,9 +5,3 @@ discord.py>=2.3.0
 
 # Environment variable management
 python-dotenv>=1.0.0
-
-# Async HTTP client (useful for API calls)
-aiohttp>=3.9.0
-
-# Date and time utilities
-python-dateutil>=2.8.2
