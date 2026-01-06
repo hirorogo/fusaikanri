@@ -194,10 +194,6 @@ class DebtDatabase:
     Returns:
       Tuple[bool, str, int]: (成功フラグ, エラーメッセージ, 残りの債権額)
     """
-    # 債権譲渡機能が有効かチェック
-    if not self.is_transfer_enabled(creditor_id):
-      return False, "債権譲渡機能が無効だぞ！\n/debt config transfer enable で有効化してくれ", 0;
-    
     # 債権の存在チェック
     current_debt = self.get_debt(creditor_id, debtor_id);
     if current_debt == 0:
@@ -274,42 +270,6 @@ class DebtDatabase:
       "description": description,
       "timestamp": datetime.now().isoformat()
     });
-  
-  def set_transfer_enabled(self, user_id: int, enabled: bool) -> bool:
-    """
-    債権譲渡機能の有効/無効を設定する
-    
-    Args:
-      user_id: ユーザーID
-      enabled: 有効フラグ
-    
-    Returns:
-      bool: 設定成功時True
-    """
-    user_str = str(user_id);
-    
-    if user_str not in self.data["user_settings"]:
-      self.data["user_settings"][user_str] = {};
-    
-    self.data["user_settings"][user_str]["transfer_enabled"] = enabled;
-    return self._save_data();
-  
-  def is_transfer_enabled(self, user_id: int) -> bool:
-    """
-    債権譲渡機能が有効かチェックする
-    
-    Args:
-      user_id: ユーザーID
-    
-    Returns:
-      bool: 有効な場合True
-    """
-    user_str = str(user_id);
-    
-    if user_str in self.data["user_settings"]:
-      return self.data["user_settings"][user_str].get("transfer_enabled", Config.TRANSFER_ENABLED_DEFAULT);
-    
-    return Config.TRANSFER_ENABLED_DEFAULT;
   
   def set_log_channel(self, guild_id: int, channel_id: int) -> bool:
     """

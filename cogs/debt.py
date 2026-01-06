@@ -111,7 +111,7 @@ class DebtCog(commands.Cog):
       return;
     
     if user.id == interaction.user.id:
-      await interaction.response.send_message("自分に自分で貸すことはできないぞ", ephemeral=True);
+      await interaction.response.send_message("自分に自分で貸すとかとんだドＭかよ", ephemeral=True);
       return;
     
     # 借金を追加（interaction.userが債権者、userが債務者）
@@ -500,34 +500,6 @@ class DebtCog(commands.Cog):
       f"残りの債権: {remaining}円",
       ephemeral=True
     );
-  
-  config_group = app_commands.Group(name="config", description="設定コマンド", parent=debt_group);
-  
-  @config_group.command(name="transfer", description="債権譲渡機能の有効/無効を設定する")
-  @app_commands.describe(mode="enable: 有効化, disable: 無効化")
-  @app_commands.choices(mode=[
-    app_commands.Choice(name="enable", value="enable"),
-    app_commands.Choice(name="disable", value="disable")
-  ])
-  async def config_transfer(self, interaction: discord.Interaction, mode: str):
-    """
-    債権譲渡機能の有効/無効を設定するコマンド
-    
-    Args:
-      interaction: インタラクション
-      mode: enable/disable
-    """
-    enabled = (mode == "enable");
-    success = self.db.set_transfer_enabled(interaction.user.id, enabled);
-    
-    if success:
-      status_text = "有効" if enabled else "無効";
-      await interaction.response.send_message(
-        f"債権譲渡機能を{status_text}にした！",
-        ephemeral=True
-      );
-    else:
-      await interaction.response.send_message("設定の保存に失敗した", ephemeral=True);
   
   @app_commands.command(name="set", description="ログチャンネルを設定する")
   @app_commands.describe(channel="ログを流すチャンネル")

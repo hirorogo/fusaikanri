@@ -28,9 +28,6 @@ class Config:
   DATA_DIR = os.getenv('DATA_DIR', 'data');
   DB_PATH = os.path.join(DATA_DIR, 'debts.json');
   
-  # 債権譲渡機能のデフォルト設定
-  TRANSFER_ENABLED_DEFAULT = False;
-  
   @classmethod
   def validate(cls) -> bool:
     """
