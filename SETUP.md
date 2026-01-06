@@ -66,6 +66,7 @@ python bot.py
 - `/debt list` - 自分の借金一覧を表示
 - `/debt status` - 特定ユーザーとの収支を確認
 - `/debt history` - 取引履歴を表示
+- `/debt summary` - サーバー全体の借金サマリーを表示
 - `/debt transfer` - 債権を譲渡（要設定）
 - `/debt config transfer` - 債権譲渡機能の有効化/無効化
 
