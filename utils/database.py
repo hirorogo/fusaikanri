@@ -136,6 +136,48 @@ class DebtDatabase:
     self._save_data();
     return True, new_amount;
   
+  def pay_on_behalf(self, payer_id: int, creditor_id: int, debtor_id: int, amount: int) -> Tuple[bool, int]:
+    """
+    他の人の借金を代わりに返済する
+    
+    Args:
+      payer_id: 返済者のID（代わりに払う人）
+      creditor_id: 債権者のID（お金を受け取る人）
+      debtor_id: 債務者のID（借金している人）
+      amount: 返済額
+    
+    Returns:
+      Tuple[bool, int]: (成功フラグ, 残りの借金額)
+    """
+    creditor_str = str(creditor_id);
+    debtor_str = str(debtor_id);
+    
+    if creditor_str not in self.data["debts"]:
+      return False, 0;
+    
+    if debtor_str not in self.data["debts"][creditor_str]:
+      return False, 0;
+    
+    current_amount = self.data["debts"][creditor_str][debtor_str];
+    
+    if amount > current_amount:
+      return False, current_amount;
+    
+    new_amount = current_amount - amount;
+    
+    if new_amount == 0:
+      del self.data["debts"][creditor_str][debtor_str];
+      if not self.data["debts"][creditor_str]:
+        del self.data["debts"][creditor_str];
+    else:
+      self.data["debts"][creditor_str][debtor_str] = new_amount;
+    
+    # 履歴を追加（代理返済であることを記録）
+    self._add_history("pay_on_behalf", creditor_id, debtor_id, amount, f"payer:{payer_id}");
+    
+    self._save_data();
+    return True, new_amount;
+  
   def get_debt(self, creditor_id: int, debtor_id: int) -> int:
     """
     特定の債権額を取得する

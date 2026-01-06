@@ -139,6 +139,74 @@ class DebtCog(commands.Cog):
         ephemeral=False
       );
   
+  @debt_group.command(name="pay_on_behalf", description="他の人の借金を代わりに返済する")
+  @app_commands.describe(
+    debtor="借金している人（債務者）",
+    creditor="貸している人（債権者）",
+    amount="返済額"
+  )
+  async def pay_on_behalf(
+    self,
+    interaction: discord.Interaction,
+    debtor: discord.User,
+    creditor: discord.User,
+    amount: int
+  ):
+    """
+    他の人の借金を代わりに返済するコマンド
+    
+    Args:
+      interaction: インタラクション
+      debtor: 債務者（借金している人）
+      creditor: 債権者（貸している人）
+      amount: 返済額
+    """
+    if amount <= 0:
+      await interaction.response.send_message("金額は1円以上を指定してくれ", ephemeral=True);
+      return;
+    
+    if debtor.id == interaction.user.id:
+      await interaction.response.send_message("自分の借金は普通に返せよ！/debt pay を使ってくれ", ephemeral=True);
+      return;
+    
+    if creditor.id == interaction.user.id:
+      await interaction.response.send_message("自分への借金は免除してやれよ", ephemeral=True);
+      return;
+    
+    # 他の人の借金を代わりに返済
+    success, remaining = self.db.pay_on_behalf(interaction.user.id, creditor.id, debtor.id, amount);
+    
+    if not success:
+      await interaction.response.send_message(
+        f"{debtor.mention}の{creditor.mention}への借金がないか、金額が多すぎるぞ",
+        ephemeral=True
+      );
+      return;
+    
+    # ログチャンネルに送信
+    if remaining == 0:
+      await self._send_log(
+        interaction.guild.id,
+        f"{interaction.user.mention}が{debtor.mention}の代わりに{creditor.mention}に{amount}円返済した！\n"
+        f"{debtor.mention}の借金は完済だ！よかったな！"
+      );
+      await interaction.response.send_message(
+        f"{debtor.mention}の代わりに{creditor.mention}に{amount}円返済した！\n"
+        f"{debtor.mention}の借金は完済だ！",
+        ephemeral=False
+      );
+    else:
+      await self._send_log(
+        interaction.guild.id,
+        f"{interaction.user.mention}が{debtor.mention}の代わりに{creditor.mention}に{amount}円返済した！\n"
+        f"{debtor.mention}の残りの借金は{remaining}円だぞ！"
+      );
+      await interaction.response.send_message(
+        f"{debtor.mention}の代わりに{creditor.mention}に{amount}円返済した！\n"
+        f"{debtor.mention}の残り: {remaining}円",
+        ephemeral=False
+      );
+  
   @debt_group.command(name="list", description="自分の借金一覧を表示する")
   async def list_debts(self, interaction: discord.Interaction):
     """
@@ -240,17 +308,28 @@ class DebtCog(commands.Cog):
       action_text = {
         "add": "借金追加",
         "pay": "返済",
-        "transfer": "債権譲渡"
+        "transfer": "債権譲渡",
+        "pay_on_behalf": "代理返済"
       }.get(h["action"], h["action"]);
       
       creditor = await self.bot.fetch_user(int(h["creditor"]));
       debtor = await self.bot.fetch_user(int(h["debtor"]));
       
-      embed.add_field(
-        name=f"{action_text} - {h['timestamp'][:10]}",
-        value=f"{creditor.display_name} → {debtor.display_name}: {h['amount']}円",
-        inline=False
-      );
+      # 代理返済の場合は返済者を表示
+      if h["action"] == "pay_on_behalf" and "payer:" in h["description"]:
+        payer_id = int(h["description"].split("payer:")[1]);
+        payer = await self.bot.fetch_user(payer_id);
+        embed.add_field(
+          name=f"{action_text} - {h['timestamp'][:10]}",
+          value=f"{creditor.display_name} ← {debtor.display_name}: {h['amount']}円 (代理: {payer.display_name})",
+          inline=False
+        );
+      else:
+        embed.add_field(
+          name=f"{action_text} - {h['timestamp'][:10]}",
+          value=f"{creditor.display_name} → {debtor.display_name}: {h['amount']}円",
+          inline=False
+        );
     
     await interaction.response.send_message(embed=embed, ephemeral=True);
   
