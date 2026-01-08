@@ -319,8 +319,8 @@ class DebtDatabase:
       for debtor_id, amount in debtors.items():
         creditor_total += amount;
         total_amount += amount;
-        
-        # 債務者の総額を更新
+            
+            # 債務者の総額を更新
         if debtor_id not in debtor_totals:
           debtor_totals[debtor_id] = 0;
         debtor_totals[debtor_id] += amount;
